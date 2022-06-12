@@ -1,1 +1,1 @@
-from .routes import GetProductsView
+from .products import ProductsViewset
