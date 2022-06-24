@@ -9,17 +9,17 @@ const Product = ({ product }) => {
 
     return (
         <Card className="my-3 p-3 rounded">
-            <Link to={`/product/${product._id}`}>
+            <Link to={`/product/${product.id}`}>
                 <Card.Img src={product.image} />
             </Link>
             <Card.Body >
-                <Link to={`/product/${product._id}`}>
+                <Link to={`/product/${product.id}`}>
                     <Card.Title as="div" >
                         <strong>{product.name}</strong>
                     </Card.Title>
                 </Link>
                 <Card.Text as="div">
-                    <Rating prodRating={product.rating} numReviews={product.numReviews} id={product._id}/>
+                    <Rating prodRating={product.rating} numReviews={product.numReviews} id={product.id}/>
                 </Card.Text>
                 <Card.Text as="h3">
                     ${product.price}
