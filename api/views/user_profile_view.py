@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 
 from rest_framework import viewsets, permissions, status
@@ -20,6 +21,7 @@ class UserPermission(permissions.BasePermission):
             "partial_update",
             "destroy",
             "get_profile",
+            "update_profile",
         ]:
             return True
         else:
@@ -36,7 +38,7 @@ class UserPermission(permissions.BasePermission):
             return obj == request.user or request.user.is_superuser
         elif view.action == "destroy":
             return request.user.is_superuser
-        elif view.action == "get_profile":
+        elif view.action in ["get_profile", "update_profile"]:
             return True
 
         return False
@@ -50,7 +52,22 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     @action(["GET"], detail=False)
     def get_profile(self, request):
         user = request.user
-        serializer = UserSerializer(user, many=False)
+        serializer = UserSerializerWithToken(user, many=False)
+        return Response(serializer.data)
+
+    @action(["PATCH"], detail=False)
+    def update_profile(self, request):
+        user = request.user
+        data = request.data
+        user.first_name = data['first_name']
+        user.username = data['email']
+        user.email = data['email']
+
+        if data.get("password"):
+            user.password = make_password(data['password'])
+
+        user.save()
+        serializer = UserSerializerWithToken(user, many=False)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -59,3 +76,4 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
