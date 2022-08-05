@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import {createSearchParams, Link, useNavigate, useParams, useSearchParams} from "react-router-dom";
+import {Link, useNavigate, useParams, useSearchParams} from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Row, Col, ListGroup, Image, Form, Button, Card } from "react-bootstrap";
 import Message from "../components/message";
@@ -26,7 +26,7 @@ const CartScreen = () => {
 
     const checkoutHandler = () => {
         navigate({
-            pathname: `/login?redirect=shipping`,
+            pathname: `/shipping`,
         });
     }
     return (
