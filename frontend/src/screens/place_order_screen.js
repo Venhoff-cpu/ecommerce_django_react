@@ -32,22 +32,34 @@ function PlaceOrderScreen() {
 
     useEffect(() => {
         if (success) {
+            dispatch({ type: ORDER_CREATE_RESET })
             navigate({
                 pathname: `/order/${order.id}`
             })
-            dispatch({ type: ORDER_CREATE_RESET })
+
         }
     }, [success, navigate, dispatch, order])
 
     const placeOrder = () => {
+        const {
+            cartItems: order_items,
+            shippingAddress: {
+                postalCode: postal_code, ...address
+            },
+            paymentMethod: payment_method,
+            itemsPrice: items_price,
+            shippingPrice: shipping_price,
+            taxPrice: tax_price,
+            totalPrice: total_price,
+        } = cart
         dispatch(createOrder({
-            orderItems: cart.cartItems,
-            shippingAddress: cart.shippingAddress,
-            paymentMethod: cart.paymentMethod,
-            itemsPrice: cart.itemsPrice,
-            shippingPrice: cart.shippingPrice,
-            taxPrice: cart.taxPrice,
-            totalPrice: cart.totalPrice,
+            order_items,
+            shipping_address: {postal_code, ...address},
+            payment_method,
+            items_price,
+            shipping_price,
+            tax_price,
+            total_price,
         }))
     }
 

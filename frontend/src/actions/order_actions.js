@@ -49,7 +49,7 @@ const createOrder = (order) => async (dispatch, getState) => {
         }
 
         const { data } = await axios.post(
-            `/api/orders/add/`,
+            `/api/order/`,
             order,
             config
         )
@@ -96,7 +96,7 @@ const getOrderDetails = (id) => async (dispatch, getState) => {
         }
 
         const { data } = await axios.get(
-            `/api/orders/${id}/`,
+            `/api/order/${id}/`,
             config
         )
 
@@ -136,7 +136,7 @@ const payOrder = (id, paymentResult) => async (dispatch, getState) => {
         }
 
         const { data } = await axios.put(
-            `/api/orders/${id}/pay/`,
+            `/api/order/${id}/pay/`,
             paymentResult,
             config
         )
@@ -176,7 +176,7 @@ const deliverOrder = (order) => async (dispatch, getState) => {
         }
 
         const { data } = await axios.put(
-            `/api/orders/${order._id}/deliver/`,
+            `/api/order/${order._id}/deliver/`,
             {},
             config
         )
@@ -217,7 +217,7 @@ const listMyOrders = () => async (dispatch, getState) => {
         }
 
         const { data } = await axios.get(
-            `/api/orders/myorders/`,
+            `/api/order/myorders/`,
             config
         )
 
@@ -256,7 +256,7 @@ const listOrders = () => async (dispatch, getState) => {
         }
 
         const { data } = await axios.get(
-            `/api/orders/`,
+            `/api/order/`,
             config
         )
 

@@ -6,13 +6,17 @@ from .product_serializer import ProductSerializer
 
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
+    order = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = ShippingAddress
         fields = "__all__"
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(many=False, read_only=True)
+    order = serializers.IntegerField(read_only=True)
+    # product = ProductSerializer(many=False, read_only=True)
+    product = serializers.IntegerField(required=False)
 
     class Meta:
         model = OrderItem
@@ -20,8 +24,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True)
-    shipping_address = ShippingAddressSerializer(many=False)
+    order_items = OrderItemSerializer(many=True, write_only=True)
+    shipping_address = ShippingAddressSerializer(many=False, write_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
