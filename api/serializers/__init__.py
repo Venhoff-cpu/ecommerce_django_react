@@ -1,8 +1,8 @@
-from .user_serializer import UserSerializer
-from .product_serializer import ProductSerializer, ReviewSerializer
+from .jwt_serializer import TokenObtainSerializer
 from .order_serializer import (
     OrderItemSerializer,
     OrderSerializer,
     ShippingAddressSerializer,
 )
-from .jwt_serializer import TokenObtainSerializer
+from .product_serializer import ProductSerializer, ReviewSerializer
+from .user_serializer import UserSerializer
