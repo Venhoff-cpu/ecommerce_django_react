@@ -54,6 +54,16 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     permission_classes = (OrderPermission,)
 
+    def get_queryset(self):
+        queryset = super(OrderViewSet, self).get_queryset()
+        user = self.request.user
+
+        if not user.is_superuser:
+            # user can only get his orders
+            queryset = queryset.filter(user=user)
+
+        return queryset
+
     def create(self, request, *args, **kwargs):
         data = request.data
         req_user = request.user
