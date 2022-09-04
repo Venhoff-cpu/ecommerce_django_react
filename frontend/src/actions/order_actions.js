@@ -99,10 +99,23 @@ const getOrderDetails = (id) => async (dispatch, getState) => {
             `/api/order/${id}/`,
             config
         )
-
+        const parsedData = {
+            orderItems: data.items,
+            shippingAddress: data.address,
+            id: data.id,
+            paymentMethod: data.payment_method,
+            taxPrice: data.tax_price,
+            shippingPrice: data.shipping_price,
+            totalPrice: data.total_price,
+            isPaid: data.is_paid,
+            paidAt: data.paid_at,
+            isDelivered: data.is_delivered,
+            deliveredAt: data.delivered_at,
+            user: data.serialized_user,
+        }
         dispatch({
             type: ORDER_DETAILS_SUCCESS,
-            payload: data
+            payload: parsedData
         })
 
 

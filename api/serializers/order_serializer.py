@@ -2,6 +2,7 @@ from api.models import Order, OrderItem, Product, ShippingAddress
 from django.db import transaction
 from rest_framework import serializers
 
+from .user_serializer import UserSerializer
 from .product_serializer import ProductSerializer
 
 
@@ -9,14 +10,14 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShippingAddress
-        fields = "__all__"
+        exclude = ["order"]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = "__all__"
+        exclude = ["order"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -24,7 +25,7 @@ class OrderSerializer(serializers.ModelSerializer):
     shipping_address = ShippingAddressSerializer(many=False, write_only=True)
     items = serializers.SerializerMethodField(read_only=True)
     address = serializers.SerializerMethodField(read_only=True)
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    serialized_user = serializers.SerializerMethodField(read_only=True, method_name="get_user")
 
     class Meta:
         model = Order
@@ -38,6 +39,11 @@ class OrderSerializer(serializers.ModelSerializer):
         shipping_address = obj.shipping_address
         return ShippingAddressSerializer(shipping_address).data
 
+    def get_user(self, obj):
+        user = obj.user
+        serializer = UserSerializer(user, many=False)
+        return serializer.data
+
     @transaction.atomic
     def create(self, validated_data):
         order_items = validated_data.pop("order_items")
@@ -46,7 +52,7 @@ class OrderSerializer(serializers.ModelSerializer):
         order = Order.objects.create(**validated_data)
         bulk_order_items = list()
         for item in order_items:
-            product = Product.objects.get(id=item["product"])
+            product = Product.objects.get(id=item["product"].id)
             order_item = OrderItem(
                 product=product,
                 name=product.name,
