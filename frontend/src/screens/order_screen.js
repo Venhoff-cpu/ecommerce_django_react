@@ -1,27 +1,51 @@
-import React, { useEffect } from 'react'
+import React, {useEffect} from 'react'
 import { Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
 import {Link, useParams} from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/message'
 import Loader from "../components/loader";
-import { getOrderDetails } from '../actions/order_actions'
+import {getOrderDetails, payOrder} from '../actions/order_actions'
+import {PayPalButtons, usePayPalScriptReducer} from "@paypal/react-paypal-js";
+import { ORDER_PAY_RESET, ORDER_DELIVER_RESET } from '../constants/order_constants'
+import * as PropTypes from "prop-types";
+
+function PayPalButton(props) {
+    return null;
+}
+
+PayPalButton.propTypes = {
+    amount: PropTypes.any,
+    onSuccess: PropTypes.func
+};
 
 function OrderScreen() {
+    // usePayPalScriptReducer can be use only inside children of PayPalScriptProviders
+    // This is the main reason to wrap the PayPalButtons in a new component
+    const [{ isPending }] = usePayPalScriptReducer();
     const { orderId } = useParams();
     const dispatch = useDispatch();
 
     const orderDetails = useSelector(state => state.orderDetails)
     const { order, error, loading } = orderDetails
 
+    const orderPay = useSelector(state => state.orderPay)
+    const { loading: loadingPay, success: successPay } = orderPay
+
     if (!loading && !error) {
         order.itemsPrice = order.orderItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2)
     }
 
     useEffect(() => {
-        if (!order || order.id !== Number(orderId)){
+        if (!order || successPay || order.id !== Number(orderId)){
+            dispatch({type: ORDER_PAY_RESET})
             dispatch(getOrderDetails(orderId))
         }
-    }, [dispatch, order, orderId])
+    }, [dispatch, order, orderId, successPay])
+
+
+    const successPaymentHandler = (paymentResult) => {
+        dispatch(payOrder(orderId, paymentResult))
+    }
 
     return loading ? ( <Loader />) :
         error ? (
@@ -121,6 +145,36 @@ function OrderScreen() {
                                     <Col>${order.totalPrice}</Col>
                                 </Row>
                             </ListGroup.Item>
+                            {!order.isPaid && (
+                                <ListGroup.Item>
+                                    {loadingPay && <Loader />}
+                                    <PayPalButtons
+                                        disabled={isPending}
+                                        fundingSource={undefined}
+                                        createOrder={(data, actions) => {
+                                            return actions.order
+                                                .create({
+                                                    purchase_units: [
+                                                        {
+                                                            amount: {
+                                                                value: order.totalPrice,
+                                                            },
+                                                        },
+                                                    ],
+                                                })
+                                                .then((orderId) => {
+                                                    // Your code here after create the order
+                                                    return orderId;
+                                                });
+                                        }}
+                                        onApprove={function (data, actions) {
+                                            return actions.order.capture().then(function () {
+                                                successPaymentHandler(data)
+                                            });
+                                        }}
+                                    />
+                                </ListGroup.Item>
+                            )}
                         </ListGroup>
                     </Card>
                 </Col>

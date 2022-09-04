@@ -148,9 +148,9 @@ const payOrder = (id, paymentResult) => async (dispatch, getState) => {
             }
         }
 
-        const { data } = await axios.put(
-            `/api/order/${id}/pay/`,
-            paymentResult,
+        const { data } = await axios.patch(
+            `/api/order/order_paid/`,
+            { id, payment_resul: paymentResult },
             config
         )
 
