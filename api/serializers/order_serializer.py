@@ -6,7 +6,6 @@ from .product_serializer import ProductSerializer
 
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
-    order = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ShippingAddress
@@ -14,9 +13,6 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    order = serializers.IntegerField(read_only=True)
-    # product = ProductSerializer(many=False, read_only=True)
-    product = serializers.IntegerField(required=False)
 
     class Meta:
         model = OrderItem
@@ -26,11 +22,21 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     order_items = OrderItemSerializer(many=True, write_only=True)
     shipping_address = ShippingAddressSerializer(many=False, write_only=True)
+    items = serializers.SerializerMethodField(read_only=True)
+    address = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Order
         fields = "__all__"
+
+    def get_items(self, obj):
+        order_items = obj.order_items.all()
+        return OrderItemSerializer(order_items, many=True).data
+
+    def get_address(self, obj):
+        shipping_address = obj.shipping_address
+        return ShippingAddressSerializer(shipping_address).data
 
     @transaction.atomic
     def create(self, validated_data):
