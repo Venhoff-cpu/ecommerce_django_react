@@ -1,4 +1,8 @@
+import datetime
+
+from django.db import transaction
 from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -17,8 +21,7 @@ class OrderPermission(permissions.BasePermission):
             "update",
             "partial_update",
             "destroy",
-            "get_profile",
-            "update_profile",
+            "order_paid",
         ]:
             return True
         else:
@@ -29,9 +32,12 @@ class OrderPermission(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         user = request.user
-        if view.action == "retrieve":
-            return user.is_superuser or obj.user == user
-        elif view.action in ["update", "partial_update"]:
+        if view.action in [
+            "retrieve",
+            "update",
+            "partial_update",
+            "order_paid",
+        ]:
             return user.is_superuser or obj.user == user
         elif view.action == "destroy":
             return request.user.is_superuser
@@ -59,3 +65,26 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    @transaction.atomic
+    @action(methods=["PATCH"], detail=False)
+    def order_paid(self, request, *args, **kwargs):
+        order_id = request.data.get("id")
+        if order_id:
+            try:
+                order = self.queryset.get(id=order_id)
+            except Order.DoesNotExist:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"detail": "Order with provided id does not exist"},
+                )
+            order.is_paid = True
+            order.paid_at = datetime.datetime.now()
+            order.save()
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Order id not provided"},
+            )
+
+        return Response(status=status.HTTP_200_OK, data=OrderSerializer(order).data)
